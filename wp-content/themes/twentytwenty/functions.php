@@ -758,3 +758,101 @@ function twentytwenty_get_elements_array() {
 	*/
 	return apply_filters( 'twentytwenty_get_elements_array', $elements );
 }
+
+ 
+add_action('init', 'costs_register');
+
+function costs_register() {
+
+	$labels = array(
+		'name' => _x('My Costs', 'post type general name'),
+		'singular_name' => _x('Costs Item', 'post type singular name'),
+		'add_new' => _x('Add New', 'Costs item'),
+		'add_new_item' => __('Add New Costs Item'),
+		'edit_item' => __('Edit Costs Item'),
+		'new_item' => __('New Costs Item'),
+		'view_item' => __('View Costs Item'),
+		'search_items' => __('Search Costs'),
+		'not_found' =>  __('Nothing found'),
+		'not_found_in_trash' => __('Nothing found in Trash'),
+		'parent_item_colon' => ''
+	);
+
+	$args = array(
+		'labels' => $labels,
+		'public' => true,
+		'publicly_queryable' => true,
+		'show_ui' => true,
+		'query_var' => true,
+		'rewrite' => true,
+		'capability_type' => 'post',
+		'hierarchical' => false,
+		'menu_position' => null,
+		'supports' => array('title','editor','thumbnail')
+	  ); 
+
+	register_post_type( 'Costs' , $args );
+}
+
+add_action("admin_init", "admin_init");
+
+function admin_init(){
+  add_meta_box("other_info", "Other info", "other_info", "Costs", "normal", "low");
+}
+
+function other_info() {
+  global $post;
+  $custom = get_post_custom($post->ID);
+  $descriptionn = $custom["descriptionn"][0];
+  $value = $custom["value"][0];
+  $id = $custom["id"][0];
+  ?>
+  <p><label>Cost Info:</label><br />
+  <textarea cols="50" rows="5" name="descriptionn"><?php echo $descriptionn; ?></textarea></p>
+  <p><label>Value:</label><br />
+  <textarea cols="50" rows="5" name="value"><?php echo $value; ?></textarea></p>
+  <p><label>Cost ID:</label><br />
+  <input type="number" name="id"><?php echo $id; ?></input></p>
+  <?php
+}
+
+add_action('save_post', 'save_details');
+function save_details(){
+  global $post;
+
+  update_post_meta($post->ID, "descriptionn", $_POST["descriptionn"]);
+  update_post_meta($post->ID, "value", $_POST["value"]);
+  update_post_meta($post->ID, "id", $_POST["id"]);
+}
+
+add_action("manage_posts_custom_column",  "costs_custom_columns");
+add_filter("manage_edit-costs_columns", "costs_edit_columns");
+
+function Costs_edit_columns($columns){
+  $columns = array(
+    "cb" => '<input type="checkbox" />',
+    "title" => "Costs Title",
+    "description" => "Description",
+    "id" => "Cost ID",
+  );
+
+  return $columns;
+}
+function Costs_custom_columns($column){
+  global $post;
+
+  switch ($column) {
+    case "description":
+      the_excerpt();
+      break;
+    case "id":
+      $custom = get_post_custom();
+      echo $custom["cost_id"][0];
+      break;
+  }
+}
+register_post_type( 'Costs' , $args );
+flush_rewrite_rules();
+
+?>
+
